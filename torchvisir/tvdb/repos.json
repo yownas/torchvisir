@@ -6,7 +6,7 @@
 	    "pkgs": [
                 "torch==2.13.0+TARGET",
                 "torchvision==0.28.0+TARGET",
-                "torchaudio==2.11.0"
+                "torchaudio==2.11.0+TARGET"
             ]
 	},
         "AMD": {
