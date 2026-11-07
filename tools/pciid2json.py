@@ -43,9 +43,9 @@ GPU_VENDOR_MAPPINGS = {
     #   https://download.pytorch.org/whl/
     "10de": {
         # Kepler - sm3.7 - Too old, sorry.
-        "Maxwell:cu129": re.compile(r"\b(gm\d+\w*)\b", re.IGNORECASE), # Maxwell - sm5
-        "Pascal:cu129": re.compile(r"\b(gp\d+\w*)\b", re.IGNORECASE), # Pascal - sm6
-        "Volta:cu129": re.compile(r"\b(gv\d+\w*)\b", re.IGNORECASE),  # Volta - sm7
+        "Maxwell:cu126": re.compile(r"\b(gm\d+\w*)\b", re.IGNORECASE), # Maxwell - sm5
+        "Pascal:cu126": re.compile(r"\b(gp\d+\w*)\b", re.IGNORECASE), # Pascal - sm6
+        "Volta:cu126": re.compile(r"\b(gv\d+\w*)\b", re.IGNORECASE),  # Volta - sm7
         "Turing:cu133": re.compile(r"\b(tu\d+\w*)\b", re.IGNORECASE), # Turing - sm7.5
         "Ampere:cu133": re.compile(r"\b(ga\d+\w*)\b", re.IGNORECASE), # Ampere - sm8.6
         "AdaLovelace:cu133": re.compile(r"\b(ad\d+\w*)\b", re.IGNORECASE), # Ada Lovelace - sm8.9
