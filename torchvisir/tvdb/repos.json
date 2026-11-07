@@ -1,0 +1,22 @@
+{
+    "repos": {
+        "NVIDIA": {
+            "pattern": "^cu",
+	    "index_url": "https://download.pytorch.org/whl/TARGET",
+	    "pkgs": [
+                "torch==2.14.0+TARGET",
+		"torchvision==0.29.0+TARGET",
+	       	"torchaudio==2.11.0.3"
+            ]
+	},
+        "AMD": {
+            "pattern": "^gfx",
+	    "index_url": "https://stable.repo.amd.com/rocm/whl-next/",
+	    "pkgs": [
+		"torch[device-TARGET]==2.14.0+rocm10.1.0",
+	       	"torchvision[device-TARGET]==0.29.0a0+rocm10.1.0",
+	       	"torchaudio==2.11.0.3+rocm10.1.0"
+            ]
+	}
+    }
+}
