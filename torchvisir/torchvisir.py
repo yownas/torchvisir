@@ -1,88 +1,111 @@
-class torchvisir:
+"""
+torchvisir - your torch-installation guide
+"""
+import json
+import platform
+import re
+import subprocess
+from pathlib import Path
+
+class Torchvisir:
+    """Functions to find a working versions for your GPU"""
     tv_db = None
     pci_ids = None
 
-    def get_pci_ids(self, sys=None):
-        import json
-        import platform
-        import re
-        import subprocess
+    def _get_pci_ids_darwin(self):
+        """Get GPUs on Apple computers"""
+        try:
+            res = subprocess.check_output([
+                "system_profiler",
+                "-json",
+                "SPDisplaysDataType"
+            ], text=True)
+        except:
+            res = ""
+        ret = []
+        try:
+            data = json.loads(res)
+            displays = data.get("SPDisplaysDataType", [])
+            for display in displays:
+                vendor_raw = display.get("spdisplays_vendor", "")
+                device_id_raw = display.get("spdisplays_device-id", "")
+                if device_id_raw and vendor_raw:
+                    device_id = device_id_raw.replace("0x", "").lower()
+                    if "Intel" in vendor_raw:
+                        vendor_id = "8086"
+                    else:
+                        match = re.search(r"\((0x\w+)\)", vendor_raw)
+                        if match:
+                            vendor_id = match.group(1).replace("0x", "").lower()
+                        else:
+                            continue
+                    ret.append(f"{str(vendor_id).lower()}:{str(device_id).lower()}")
+        except:
+            pass
+        return ret
 
+    def _get_pci_ids_linux(self):
+        """Get GPUs on Linux"""
+        try:
+            res = subprocess.check_output([
+                "lspci",
+                "-nn"
+            ], text=True)
+        except Exception as e:
+            print(f"ERROR: {e}")
+            res = ""
+        ret = []
+        for line in res.splitlines():
+            match = re.search(r"\[(\w+):(\w+)\]", line)
+            if match:
+                ret.append(f"{match.group(1).lower()}:{match.group(2).lower()}")
+        return ret
+
+    def _get_pci_ids_windows(self):
+        """Get GPUs on Windows"""
+        try:
+            res = subprocess.check_output([
+                "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "-Command",
+                "Get-WmiObject Win32_VideoController | ForEach-Object { $_.PNPDeviceID }",
+            ], text=True, stderr=subprocess.DEVNULL)
+        except:
+            res = ""
+        ret = []
+        for line in res.splitlines():
+            match = re.search(r"VEN_(\w+)&DEV_(\w+)", line, re.IGNORECASE)
+            if match:
+                ret.append(f"{match.group(1).lower()}:{match.group(2).lower()}")
+        return ret
+
+    def get_pci_ids(self, sys=None):
+        """Get a list of all PCIe devices on the system"""
         self.pci_ids = []
 
-        if sys is None: sys = platform.system()
+        if sys is None:
+            sys = platform.system()
 
         match sys:
             case "Darwin":
-                try:
-                    res = subprocess.check_output([
-                        "system_profiler",
-                        "-json",
-                        "SPDisplaysDataType"
-                    ], text=True)
-                except:
-                    res = ""
-
-                try:
-                    data = json.loads(output)
-                    displays = data.get("SPDisplaysDataType", [])
-                    for display in displays:
-                        vendor_raw = display.get("spdisplays_vendor", "")
-                        device_id_raw = display.get("spdisplays_device-id", "")
-                        if device_id_raw and vendor_raw:
-                            device_id = device_id_raw.replace("0x", "").lower()
-                            if "Intel" in vendor_raw:
-                                vendor_id = "8086"
-                            else:
-                                match = re.search(r"\((0x\w+)\)", vendor_raw)
-                                if match:
-                                    vendor_id = match.group(1).replace("0x", "").lower()
-                                else:
-                                    continue
-                            self.pci_ids.append(f"{str(vendor_id).lower()}:{str(device_id).lower()}")
-                except:
-                    pass
-
+                self.pci_ids = self._get_pci_ids_darwin()
             case "Linux":
-                try:
-                    res = subprocess.check_output([
-                        "lspci",
-                        "-nn"
-                    ], text=True)
-                except Exception as e:
-                    res = ""
-
-                for line in res.splitlines():
-                    match = re.search(r"\[(\w+):(\w+)\]", line)
-                    if match:
-                        self.pci_ids.append(f"{match.group(1).lower()}:{match.group(2).lower()}")
-
+                self.pci_ids = self._get_pci_ids_linux()
             case "Windows":
-                try:
-                    res = subprocess.check_output([
-                        "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                        "-Command",
-                        "Get-WmiObject Win32_VideoController | ForEach-Object { $_.PNPDeviceID }",
-                    ], text=True, stderr=subprocess.DEVNULL)
-                except:
-                    res = ""
-                for line in res.splitlines():
-                    match = re.search(r"VEN_(\w+)&DEV_(\w+)", line, re.IGNORECASE)
-                    if match:
-                        self.pci_ids.append(f"{match.group(1).lower()}:{match.group(2).lower()}")
+                self.pci_ids = self._get_pci_ids_windows()
 
         return self.pci_ids
 
     def clear_tv_db(self):
+        """Resets the tv_db."""
         self.tv_db = None
 
     def load_tv_db(self, folder=None):
-        import json
-        from pathlib import Path
-
+        """Load json files in a folder to populate tv_db, may be run multiple times"""
         self.tv_db = {}
-        if folder is None: folder = Path(__file__).resolve().parent / 'tvdb' # Default path to GPU DB
-        files = Path.iterdir(folder)
+        # Use a default path to GPU DB if it wasn't specified
+        if folder is None:
+            folder = Path(__file__).resolve().parent / 'tvdb'
+        files = Path(folder).iterdir()
         for file in files:
             # Check if the file has a .json extension
             if str(file).endswith('.json'):
@@ -90,14 +113,14 @@ class torchvisir:
                 file_path = file
                 try:
                     # Import all JSON files into tv_db
-                    with open(file_path, 'r') as json_file:
+                    with open(file_path, 'r', encoding='utf-8') as json_file:
                         data = json.load(json_file)
                         self.tv_db.update(data)
                 except Exception as e:
                     print(f"Error reading {file}: {e}")
-        return
 
     def get_torch_targets(self, pci_ids=None):
+        """Return a set of targets derived from your PCIe devices"""
         ret = set()
         if pci_ids is None:
             if self.pci_ids is None:
@@ -113,14 +136,12 @@ class torchvisir:
                     ret.add(f"{self.tv_db['pci_id_data'][device]}")
         return ret
 
-    def install_torch(self, target=None, dry_run=False):
-        import re
-        import subprocess
-
+    def install_torch(self, target=None, dry_run=False, quiet=True):
+        """Try to figure out a good pip-command for the current setup"""
         if target is None:
             target = self.get_torch_targets()
-        
-        tgt = next(iter(target)) # TODO: We might have multiple targets, but we'll only pick the first one
+
+        tgt = next(iter(target)) # TODO: We might have multiple targets
         for vendor in self.tv_db['repos']:
             if re.match(self.tv_db['repos'][vendor]['pattern'], tgt):
                 index_url = re.sub('TARGET', tgt, self.tv_db['repos'][vendor]['index_url'])
@@ -128,10 +149,8 @@ class torchvisir:
                 for pkg in self.tv_db['repos'][vendor]['pkgs']:
                     pkgs.append(re.sub('TARGET', tgt, pkg))
                 cmd = ['pip', 'install'] + pkgs + ['--index-url', index_url]
-                print("> ", cmd)
+                if not quiet:
+                    print("> ", ' '.join(cmd))
                 if not dry_run:
-                    subprocess.run(cmd)
+                    subprocess.check_output(cmd, text=True)
                 break
-
-
-

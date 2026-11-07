@@ -72,7 +72,7 @@ pci_id_data = {
 
 def process_pci_file(input_file: str):
     # Initialize the current vendor context
-    vendor_id, vendor_name = None, None
+    vendor_id, _ = None, None
 
     with open(input_file, "r", encoding="utf-8") as file:
         add_subdevices = False
@@ -85,13 +85,13 @@ def process_pci_file(input_file: str):
             # Match vendor lines (no tab)
             match_vendor = VENDOR_REGEX.match(line)
             if match_vendor:
-                vendor_id, vendor_name = match_vendor.groups()
+                vendor_id, _ = match_vendor.groups()
                 continue  # Move to next line for processing
 
             if vendor_id not in GPU_VENDOR_MAPPINGS:
                 continue # Skip all non-gpu-vendor lines
 
-            # Match subdevice lines (two tabs) 
+            # Match subdevice lines (two tabs)
             if add_subdevices:
                 match_subdevice = SUBDEVICE_REGEX.match(line)
                 if match_subdevice:
@@ -109,7 +109,7 @@ def process_pci_file(input_file: str):
                 for gpu in GPU_VENDOR_MAPPINGS[vendor_id]:
                     pat = GPU_VENDOR_MAPPINGS[vendor_id][gpu]
                     if pat.search(device_name):
-                        gpu_name, gpu_arch = gpu.split(":")
+                        _ , gpu_arch = gpu.split(":")
                         pci_id_data["pci_id_data"][f"{vendor_id}:{device_id}"] = gpu_arch
                         add_subdevices = True
                         break
@@ -124,7 +124,5 @@ if __name__ == "__main__":
         print("Get the text file at https://github.com/pciutils/pciids/raw/refs/heads/master/pci.ids")
         sys.exit(1)
 
-    input_file = sys.argv[1]
-
     # Process the input file and output to the SQLite database
-    process_pci_file(input_file)
+    process_pci_file(sys.argv[1])
