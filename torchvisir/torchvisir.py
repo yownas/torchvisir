@@ -136,7 +136,7 @@ class Torchvisir:
                     ret.add(f"{self.tv_db['pci_id_data'][device]}")
         return ret
 
-    def install_torch(self, target=None, dry_run=False, quiet=True):
+    def install_torch(self, target=None, dry_run=False, quiet=True, force=False):
         """Try to figure out a good pip-command for the current setup"""
         if target is None:
             target = self.get_torch_targets()
@@ -148,7 +148,10 @@ class Torchvisir:
                 pkgs = []
                 for pkg in self.tv_db['repos'][vendor]['pkgs']:
                     pkgs.append(re.sub('TARGET', tgt, pkg))
-                cmd = ['pip', 'install'] + pkgs + ['--index-url', index_url]
+                cmd = ['pip', 'install']
+                if force:
+                    cmd += ['--force-reinstall']
+                cmd += pkgs + ['--index-url', index_url]
                 if not quiet:
                     print("> ", ' '.join(cmd))
                 if not dry_run:

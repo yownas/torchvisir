@@ -37,6 +37,12 @@ GPU_VENDOR_MAPPINGS = {
     # AMD Radeon 680M iGPU	gfx1035	device-gfx1035
     # AMD Raphael iGPU	gfx1036	device-gfx1036
 
+    # INTEL
+    #   https://download.pytorch.org/whl/xpu
+    "8086": {
+       "Intel XPU:xpu": re.compile(r"DG2 ", re.IGNORECASE),
+    },
+
     # NVIDIA
     #   https://github.com/easydiffusion/torchruntime/blob/main/torchruntime/gpu_db.py
     #   https://en.wikipedia.org/wiki/CUDA
