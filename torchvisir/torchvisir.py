@@ -5,11 +5,12 @@ import json
 import platform
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 class Torchvisir:
     """Functions to find a working versions for your GPU"""
-    tv_db = None
+    data = None
     pci_ids = None
 
     def _get_pci_ids_darwin(self):
@@ -78,14 +79,14 @@ class Torchvisir:
                 ret.append(f"{match.group(1).lower()}:{match.group(2).lower()}")
         return ret
 
-    def get_pci_ids(self, sys=None):
+    def get_pci_ids(self, pycmd=None):
         """Get a list of all PCIe devices on the system"""
         self.pci_ids = []
 
-        if sys is None:
-            sys = platform.system()
+        if pycmd is None:
+            pycmd = platform.system()
 
-        match sys:
+        match pycmd:
             case "Darwin":
                 self.pci_ids = self._get_pci_ids_darwin()
             case "Linux":
@@ -95,13 +96,13 @@ class Torchvisir:
 
         return self.pci_ids
 
-    def clear_tv_db(self):
-        """Resets the tv_db."""
-        self.tv_db = None
+    def clear_data(self):
+        """Resets data."""
+        self.data = None
 
-    def load_tv_db(self, folder=None):
-        """Load json files in a folder to populate tv_db, may be run multiple times"""
-        self.tv_db = {}
+    def load_data(self, folder=None):
+        """Load json files in a folder to populate , may be run multiple times"""
+        self.data = {}
         # Use a default path to GPU DB if it wasn't specified
         if folder is None:
             folder = Path(__file__).resolve().parent / 'tvdb'
@@ -112,10 +113,10 @@ class Torchvisir:
                 #file_path = os.path.join(folder, file)
                 file_path = file
                 try:
-                    # Import all JSON files into tv_db
+                    # Import all JSON files into data
                     with open(file_path, 'r', encoding='utf-8') as json_file:
                         data = json.load(json_file)
-                        self.tv_db.update(data)
+                        self.data.update(data)
                 except Exception as e:
                     print(f"Error reading {file}: {e}")
 
@@ -127,33 +128,32 @@ class Torchvisir:
                 self.get_pci_ids()
             pci_ids = self.pci_ids
 
-        if self.tv_db is None:
-            self.load_tv_db()
+        if self.data is None:
+            self.load_data()
 
-        if pci_ids is not None and self.tv_db is not None:
+        if pci_ids is not None and self.data is not None:
             for device in pci_ids:
-                if device in self.tv_db['pci_id_data']:
-                    ret.add(f"{self.tv_db['pci_id_data'][device]}")
+                if device in self.data['pci_id_data']:
+                    ret.add(f"{self.data['pci_id_data'][device]}")
         return ret
 
-    def install_torch(self, target=None, dry_run=False, quiet=True, force=False):
+    def install_torch(self, target=None, dry_run=False, force_reinstall=False):
         """Try to figure out a good pip-command for the current setup"""
         if target is None:
             target = self.get_torch_targets()
 
         tgt = next(iter(target)) # TODO: We might have multiple targets
-        for vendor in self.tv_db['repos']:
-            if re.match(self.tv_db['repos'][vendor]['pattern'], tgt):
-                index_url = re.sub('TARGET', tgt, self.tv_db['repos'][vendor]['index_url'])
+        for vendor in self.data['repos']:
+            if re.match(self.data['repos'][vendor]['pattern'], tgt):
+                index_url = re.sub('TARGET', tgt, self.data['repos'][vendor]['index_url'])
                 pkgs = []
-                for pkg in self.tv_db['repos'][vendor]['pkgs']:
+                for pkg in self.data['repos'][vendor]['pkgs']:
                     pkgs.append(re.sub('TARGET', tgt, pkg))
-                cmd = ['pip', 'install']
-                if force:
+                cmd = [sys.executable, '-m', 'pip', 'install']
+                if force_reinstall:
                     cmd += ['--force-reinstall']
-                cmd += pkgs + ['--index-url', index_url]
-                if not quiet:
-                    print("> ", ' '.join(cmd))
+                cmd += pkgs + ['--extra-index-url', index_url]
                 if not dry_run:
                     subprocess.check_output(cmd, text=True)
                 break
+        return ' '.join(cmd)

@@ -22,9 +22,9 @@
             "pattern": "^xpu",
             "index_url": "https://download.pytorch.org/whl/xpu",
             "pkgs": [
-                "torch",
-                "torchvision",
-                "torchaudio"
+                "torch+xpu",
+                "torchvision+xpu",
+                "torchaudio+xpu"
             ]
         }
     }

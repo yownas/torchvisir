@@ -1,3 +1,6 @@
+'''
+Update tvdb/gpus.json before release
+'''
 # Converts the txt file at https://github.com/pciutils/pciids/blob/master/pci.ids to json
 
 import json
@@ -77,7 +80,9 @@ pci_id_data = {
 }
 
 def process_pci_file(input_file: str):
-    # Initialize the current vendor context
+    '''
+    Parse the pci_id file and find GPUs that match the vendor patterns above
+    '''
     vendor_id, _ = None, None
 
     with open(input_file, "r", encoding="utf-8") as file:
