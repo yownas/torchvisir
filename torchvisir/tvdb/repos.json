@@ -1,7 +1,7 @@
 {
     "repos": {
         "NVIDIA": {
-            "pattern": "^cu",
+            "pattern": "^cu[0-9]+:.+",
             "index_url": "https://download.pytorch.org/whl/TARGET",
             "pkgs": [
                 "torch==2.14.1+TARGET",
@@ -10,7 +10,7 @@
             ]
         },
         "AMD": {
-            "pattern": "^gfx",
+            "pattern": "^gfx[0-9]+:.+",
             "index_url": "https://stable.repo.amd.com/rocm/whl-next/",
             "pkgs": [
                 "torch[device-TARGET]==2.14.0+rocm10.1.0",
@@ -19,12 +19,21 @@
             ]
         },
         "INTEL": {
-            "pattern": "^xpu",
+            "pattern": "^xpu:.+",
             "index_url": "https://download.pytorch.org/whl/xpu",
             "pkgs": [
                 "torch+xpu",
                 "torchvision+xpu",
                 "torchaudio+xpu"
+            ]
+        },
+        "CPU": {
+            "pattern": "^cpu:.+",
+            "index_url": "https://download.pytorch.org/whl",
+            "pkgs": [
+                "torch",
+                "torchvision",
+                "torchaudio"
             ]
         }
     }

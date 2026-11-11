@@ -6,7 +6,7 @@ find their way through rough weather. The earliest known attestation is in the 1
 
 # Torchvisir
 
-Of the many horrors AI have brought upon us, one of the least talked about is having to install the correct version of pytoch
+Of the many horrors AI have brought upon us, one of the least talked about is having to install the correct version of pytorch
 to match the GPU, operating system and application. This tool will hopefully take care of that.
 
 # Usage
@@ -32,10 +32,10 @@ All data, and most of the logic, are saved as json. You can change or add device
 
 Like adding your own PCI devices, a folder with json files or a python dict. Same with vendor repositories.
 
-In normal cases ytou shouldn't need any of this, but you can poke at things if you really want to.
+In normal cases you shouldn't need any of this, but you can poke at things if you really want to.
 
 ```
-tv.load_data('my_folder_with/pci2taget-mappings/')
+tv.load_data('my_folder_with/pci2target-mappings/')
 tv.data['pci_id_data']['ffff:ffff'] = 'visir-gpu123' # Imaginary GPU
 tv.data['repos']['VisirGPUs'] = {
     "pattern": "^visir-gpu",
@@ -55,7 +55,6 @@ print(tv.install_torch(dry_run=True))
 
 Torchvisir is in early development, there are still a lot of things that needs to be fixed:
 
-* CPU fallback
 * Detect supported python versions
 * Documentation
   

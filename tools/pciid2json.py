@@ -55,11 +55,11 @@ GPU_VENDOR_MAPPINGS = {
         "Maxwell:cu126": re.compile(r"\b(gm\d+\w*)\b", re.IGNORECASE), # Maxwell - sm5
         "Pascal:cu126": re.compile(r"\b(gp\d+\w*)\b", re.IGNORECASE), # Pascal - sm6
         "Volta:cu126": re.compile(r"\b(gv\d+\w*)\b", re.IGNORECASE),  # Volta - sm7
-        "Turing:cu133": re.compile(r"\b(tu\d+\w*)\b", re.IGNORECASE), # Turing - sm7.5
-        "Ampere:cu133": re.compile(r"\b(ga\d+\w*)\b", re.IGNORECASE), # Ampere - sm8.6
-        "AdaLovelace:cu133": re.compile(r"\b(ad\d+\w*)\b", re.IGNORECASE), # Ada Lovelace - sm8.9
-        "GraceHopper:cu133": re.compile(r"\b(gh\d+\w*)\b", re.IGNORECASE), # Grace Hopper - sm9.0
-        "Blackwell:cu133": re.compile(r"\b(?:gb\d+\w*|5060|5070|5080|5090)\b", re.IGNORECASE), # Blackwell - sm10, sm12
+        "Turing:cu130": re.compile(r"\b(tu\d+\w*)\b", re.IGNORECASE), # Turing - sm7.5
+        "Ampere:cu130": re.compile(r"\b(ga\d+\w*)\b", re.IGNORECASE), # Ampere - sm8.6
+        "AdaLovelace:cu130": re.compile(r"\b(ad\d+\w*)\b", re.IGNORECASE), # Ada Lovelace - sm8.9
+        "GraceHopper:cu130": re.compile(r"\b(gh\d+\w*)\b", re.IGNORECASE), # Grace Hopper - sm9.0
+        "Blackwell:cu130": re.compile(r"\b(?:gb\d+\w*|5060|5070|5080|5090)\b", re.IGNORECASE), # Blackwell - sm10, sm12
     },
 }
 

@@ -79,14 +79,14 @@ class Torchvisir:
                 ret.append(f"{match.group(1).lower()}:{match.group(2).lower()}")
         return ret
 
-    def get_pci_ids(self, pycmd=None):
+    def get_pci_ids(self, tgt_os=None):
         """Get a list of all PCIe devices on the system"""
         self.pci_ids = []
 
-        if pycmd is None:
-            pycmd = platform.system()
+        if tgt_os is None:
+            tgt_os = platform.system()
 
-        match pycmd:
+        match tgt_os:
             case "Darwin":
                 self.pci_ids = self._get_pci_ids_darwin()
             case "Linux":
@@ -142,17 +142,33 @@ class Torchvisir:
         if target is None:
             target = self.get_torch_targets()
 
-        tgt = next(iter(target)) # TODO: We might have multiple targets
+        if self.data is None:
+            self.load_data()
+
+        try:
+            tgt = next(iter(target)) # TODO: We might have multiple targets
+        except:
+            # Fallback to 'cpu'
+            tgt = 'cpu'
+
+        tgt_sys = platform.system()
+        tgt = f"{tgt}:{tgt_sys}"
+        cmd = []
         for vendor in self.data['repos']:
-            if re.match(self.data['repos'][vendor]['pattern'], tgt):
+            pattern = self.data['repos'][vendor]['pattern']
+            if re.match(pattern, tgt):
                 index_url = re.sub('TARGET', tgt, self.data['repos'][vendor]['index_url'])
                 pkgs = []
                 for pkg in self.data['repos'][vendor]['pkgs']:
                     pkgs.append(re.sub('TARGET', tgt, pkg))
+
                 cmd = [sys.executable, '-m', 'pip', 'install']
                 if force_reinstall:
                     cmd += ['--force-reinstall']
-                cmd += pkgs + ['--extra-index-url', index_url]
+                cmd += pkgs
+                if index_url:
+                    cmd += ['--index-url', index_url]
+
                 if not dry_run:
                     subprocess.check_output(cmd, text=True)
                 break
