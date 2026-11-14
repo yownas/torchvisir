@@ -2,16 +2,32 @@
 torchvisir - your torch-installation guide
 """
 import json
+import logging
 import platform
 import re
 import subprocess
 import sys
 from pathlib import Path
 
+log = logging.getLogger(__name__)
+
+DEFAULT_DB = Path(__file__).resolve().parent / "tvdb"
+
+def _deep_merge(base: dict, new: dict) -> dict:
+    """Recursively merge `new` into `base` (in place). Later values win;
+    nested dicts are merged, anything else (including lists) is replaced."""
+    for key, value in new.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            _deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
 class Torchvisir:
     """Functions to find a working versions for your GPU"""
-    data = {}
-    pci_ids = []
+    def __init__(self):
+        self.data = {}
+        self.pci_ids = []
 
     def _get_pci_ids_darwin(self):
         """Get GPUs on Apple computers"""
@@ -53,7 +69,7 @@ class Torchvisir:
                 "-nn"
             ], text=True)
         except Exception as e:
-            print(f"ERROR: {e}")
+            log.error("Error running lspci: %s", e)
             res = ""
         ret = []
         for line in res.splitlines():
@@ -103,21 +119,21 @@ class Torchvisir:
     def load_data(self, folder=None):
         """Load json files in a folder to populate , may be run multiple times"""
         # Use a default path to GPU DB if it wasn't specified
-        if folder is None:
-            folder = Path(__file__).resolve().parent / 'tvdb'
-        files = Path(folder).iterdir()
-        for file in files:
-            # Check if the file has a .json extension
-            if str(file).endswith('.json'):
-                #file_path = os.path.join(folder, file)
-                file_path = file
-                try:
-                    # Import all JSON files into data
-                    with open(file_path, 'r', encoding='utf-8') as json_file:
-                        data = json.load(json_file)
-                        self.data.update(data)
-                except Exception as e:
-                    print(f"Error reading {file}: {e}")
+        folder = Path(folder) if folder is not None else DEFAULT_DB
+        if not folder.is_dir():
+            raise FileNotFoundError(f"Data folder not found: {folder}")
+
+        for file in sorted(folder.glob("*.json")):
+            try:
+                with open(file, "r", encoding="utf-8") as fh:
+                    content = json.load(fh)
+            except (OSError, json.JSONDecodeError) as e:
+                log.warning("Skipping %s: %s", file, e)
+                continue
+            if not isinstance(content, dict):
+                log.warning("Skipping %s: top level must be a JSON object", file)
+                continue
+            _deep_merge(self.data, content)
 
     def get_torch_targets(self, pci_ids=None):
         """Return a set of targets derived from your PCIe devices"""
