@@ -10,8 +10,8 @@ from pathlib import Path
 
 class Torchvisir:
     """Functions to find a working versions for your GPU"""
-    data = None
-    pci_ids = None
+    data = {}
+    pci_ids = []
 
     def _get_pci_ids_darwin(self):
         """Get GPUs on Apple computers"""
@@ -98,11 +98,10 @@ class Torchvisir:
 
     def clear_data(self):
         """Resets data."""
-        self.data = None
+        self.data = {}
 
     def load_data(self, folder=None):
         """Load json files in a folder to populate , may be run multiple times"""
-        self.data = {}
         # Use a default path to GPU DB if it wasn't specified
         if folder is None:
             folder = Path(__file__).resolve().parent / 'tvdb'
@@ -124,14 +123,14 @@ class Torchvisir:
         """Return a set of targets derived from your PCIe devices"""
         ret = set()
         if pci_ids is None:
-            if self.pci_ids is None:
+            if len(self.pci_ids) == 0:
                 self.get_pci_ids()
             pci_ids = self.pci_ids
 
-        if self.data is None:
+        if len(self.data) == 0:
             self.load_data()
 
-        if pci_ids is not None and self.data is not None:
+        if len(pci_ids) > 0 and len(self.data) > 0:
             for device in pci_ids:
                 if device in self.data['pci_id_data']:
                     ret.add(f"{self.data['pci_id_data'][device]}")
@@ -142,7 +141,7 @@ class Torchvisir:
         if target is None:
             target = self.get_torch_targets()
 
-        if self.data is None:
+        if len(self.data) == 0:
             self.load_data()
 
         try:
