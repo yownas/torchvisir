@@ -167,11 +167,10 @@ class Torchvisir:
             tgt = 'cpu'
 
         tgt_sys = platform.system()
-        tgt = f"{tgt}:{tgt_sys}"
         cmd = []
         for vendor in self.data['repos']:
             pattern = self.data['repos'][vendor]['pattern']
-            if re.match(pattern, tgt):
+            if re.match(pattern, f"{tgt}:{tgt_sys}"):
                 index_url = re.sub('TARGET', tgt, self.data['repos'][vendor]['index_url'])
                 pkgs = []
                 for pkg in self.data['repos'][vendor]['pkgs']:
