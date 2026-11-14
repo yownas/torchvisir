@@ -3,6 +3,7 @@ Update tvdb/gpus.json before release
 '''
 # Converts the txt file at https://github.com/pciutils/pciids/blob/master/pci.ids to json
 
+import argparse
 import json
 import re
 import sys
@@ -79,11 +80,13 @@ pci_id_data = {
     }
 }
 
-def process_pci_file(input_file: str):
+def process_pci_file(args):
     '''
     Parse the pci_id file and find GPUs that match the vendor patterns above
     '''
     vendor_id, _ = None, None
+
+    input_file=args.filename
 
     with open(input_file, "r", encoding="utf-8") as file:
         add_subdevices = False
@@ -107,7 +110,10 @@ def process_pci_file(input_file: str):
                 match_subdevice = SUBDEVICE_REGEX.match(line)
                 if match_subdevice:
                     tmp_vendor_id, device_id, device_name = match_subdevice.groups()
-                    pci_id_data["pci_id_data"][f"{tmp_vendor_id}:{device_id}"] = gpu_arch
+                    if args.lookup is None:
+                        pci_id_data["pci_id_data"][f"{tmp_vendor_id}:{device_id}"] = gpu_arch
+                    elif args.lookup == f"{tmp_vendor_id}:{device_id}":
+                        print(f"{tmp_vendor_id}:{device_id}    {device_name}")
                 else:
                     add_subdevices = False # Not a subdevice line, stop looking
 
@@ -121,19 +127,22 @@ def process_pci_file(input_file: str):
                     pat = GPU_VENDOR_MAPPINGS[vendor_id][gpu]
                     if pat.search(device_name):
                         _ , gpu_arch = gpu.split(":")
-                        pci_id_data["pci_id_data"][f"{vendor_id}:{device_id}"] = gpu_arch
+                        if args.lookup is None:
+                            pci_id_data["pci_id_data"][f"{vendor_id}:{device_id}"] = gpu_arch
+                        elif args.lookup == f"{vendor_id}:{device_id}":
+                            print(f"{vendor_id}:{device_id}    {device_name}")
                         add_subdevices = True
                         break
 
     # Print the json data
-    print(json.dumps(pci_id_data, ensure_ascii=False, indent=4))
+    if args.lookup is None:
+        print(json.dumps(pci_id_data, ensure_ascii=False, indent=4))
 
 if __name__ == "__main__":
-    # Check if input and output arguments are provided
-    if len(sys.argv) != 2:
-        print(f"Usage: python {sys.argv[0]} <input_file>")
-        print("Get the text file at https://github.com/pciutils/pciids/raw/refs/heads/master/pci.ids")
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--lookup", type=str, default=None, metavar="1234:abcd", help="Look up PCI id")
+    parser.add_argument("filename", nargs="?", default="pci.ids", help="pci.ids filename (optional)")
+    args = parser.parse_args()
 
     # Process the input file and output to the SQLite database
-    process_pci_file(sys.argv[1])
+    process_pci_file(args)
