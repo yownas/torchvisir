@@ -176,7 +176,7 @@ class Torchvisir:
                 for pkg in self.data['repos'][vendor]['pkgs']:
                     pkgs.append(re.sub('TARGET', tgt, pkg))
 
-                cmd = [sys.executable, '-m', 'pip', 'install']
+                cmd = [sys.executable, '-m', 'pip', 'install', '--no-warn-script-location']
                 if force_reinstall:
                     cmd += ['--force-reinstall']
                 cmd += pkgs
