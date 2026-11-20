@@ -12,25 +12,25 @@ GPU_VENDOR_MAPPINGS = {
     # AMD
     #   https://github.com/ROCm/TheRock/blob/main/RELEASES.md#gfx-target-lookup-table
     "1002": {
-        "AMD Instinct MI355X / MI350X:gfx950": re.compile(r"\[Instinct (MI355X|MI350X)\]", re.IGNORECASE),
-        "AMD Instinct MI325X / MI300X / MI300A:gfx942": re.compile(r"\[Instinct (MI325X|MI300X|MI300A)", re.IGNORECASE),
-        "AMD Instinct MI250X / MI250 / MI210:gfx90a": re.compile(r"\[Instinct (MI250X|MI250X/MI250|MI210)", re.IGNORECASE),
-        "AMD Instinct MI100:gfx908": re.compile(r"\[Instinct (MI100)", re.IGNORECASE),
+        "AMD Instinct MI25:gfx900": re.compile(r"^Vega 20\b", re.IGNORECASE),
         "AMD Instinct MI60 / MI50, Radeon Pro VII, Radeon VII:gfx906": re.compile(r"Vega 20", re.IGNORECASE),
-        "AMD Instinct MI25:gfx900": re.compile(r"Vega 20", re.IGNORECASE),
-        "AMD Radeon RX 9070 / XT, AI PRO R9700 / R9600D:gfx1201": re.compile(r"Navi 48 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 9060 / XT:gfx1200": re.compile(r"Navi 44 \[Radeon", re.IGNORECASE),
-        "AMD Radeon 820M iGPU:gfx1153": re.compile(r"Krackan2 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 7600:gfx1102": re.compile(r"Navi 33 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 7800 XT / 7700 XT, PRO V710 / W7700:gfx1101": re.compile(r"Navi 32 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 7900 XTX / 7900 XT, PRO W7900 / W7800:gfx1100": re.compile(r"Navi 31 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 6900 XT / 6800 XT, PRO W6800 / V620:gfx1030": re.compile(r"Navi 21 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 6750 XT / 6700 XT:gfx1031": re.compile(r"Navi 22 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 6600 XT / 6600, PRO W6600:gfx1032": re.compile(r"Navi 23 \[Radeon", re.IGNORECASE),
+        "AMD Instinct MI100:gfx908": re.compile(r"^Arcturus\b", re.IGNORECASE),
+        "AMD Instinct MI250X / MI250 / MI210:gfx90a": re.compile(r"\[Instinct (MI250X|MI250X/MI250|MI210)", re.IGNORECASE),
+        "AMD Instinct MI325X / MI300X / MI300A:gfx942": re.compile(r"\[Instinct (MI325X|MI308X|MI300X|MI300A)", re.IGNORECASE),
+        "AMD Instinct MI355X / MI350X:gfx950": re.compile(r"\[Instinct (MI355X|MI350X|MI350P)\]", re.IGNORECASE),
+        "AMD Radeon RX 5700 / XT:gfx1010": re.compile(r"Navi 10\b", re.IGNORECASE),
+        "AMD Radeon Pro V520:gfx1011": re.compile(r"Navi 12\b", re.IGNORECASE),
+        "AMD Radeon Pro W5500:gfx1012": re.compile(r"Navi 14\b", re.IGNORECASE),
+        "AMD Radeon RX 6900 XT / 6800 XT, PRO W6800 / V620:gfx1030": re.compile(r"Navi 21\b", re.IGNORECASE),
+        "AMD Radeon RX 6750 XT / 6700 XT:gfx1031": re.compile(r"Navi 22\b", re.IGNORECASE),
+        "AMD Radeon RX 6600 XT / 6600, PRO W6600:gfx1032": re.compile(r"Navi 23\b", re.IGNORECASE),
         "AMD Radeon RX 6500 XT:gfx1034": re.compile(r"Navi 24 \[Radeon", re.IGNORECASE),
-        "AMD Radeon RX 5700 / XT:gfx1010": re.compile(r"Navi 10 \[Radeon", re.IGNORECASE),
-        "AMD Radeon Pro V520:gfx1011": re.compile(r"Navi 12 \[Radeon", re.IGNORECASE),
-        "AMD Radeon Pro W5500:gfx1012": re.compile(r"Navi 14 \[Radeon", re.IGNORECASE),
+        "AMD Radeon RX 7900 XTX / 7900 XT, PRO W7900 / W7800:gfx1100": re.compile(r"Navi 31\b", re.IGNORECASE),
+        "AMD Radeon RX 7800 XT / 7700 XT, PRO V710 / W7700:gfx1101": re.compile(r"Navi 32\b", re.IGNORECASE),
+        "AMD Radeon RX 7600:gfx1102": re.compile(r"Navi 33\b", re.IGNORECASE),
+        "AMD Radeon 820M iGPU:gfx1153": re.compile(r"Krackan2 \[Radeon", re.IGNORECASE),
+        "AMD Radeon RX 9070 / XT, AI PRO R9700 / R9600D:gfx1201": re.compile(r"Navi 48\b", re.IGNORECASE),
+        "AMD Radeon RX 9060 / XT:gfx1200": re.compile(r"Navi 44 \[Radeon", re.IGNORECASE),
     },
     # Supported by TheRock but not found (?) in PCIid db.
     # AMD Ryzen AI 7 350 gfx1152
@@ -44,7 +44,7 @@ GPU_VENDOR_MAPPINGS = {
     # INTEL
     #   https://download.pytorch.org/whl/xpu
     "8086": {
-       "Intel XPU:xpu": re.compile(r"DG2 ", re.IGNORECASE),
+       "Intel XPU:xpu": re.compile(r"^(DG2|Battlemage|Ponte Vecchio|ATS-M)\b"),
     },
 
     # NVIDIA
