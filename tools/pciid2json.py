@@ -70,15 +70,10 @@ SKIP_LINE_REGEX = re.compile(r"^\t{2,}")
 VENDOR_REGEX = re.compile(r"^([0-9a-f]{4})\s+(.*)", re.IGNORECASE)
 DEVICE_REGEX = re.compile(r"^\t([0-9a-f]{4})\s+(.*)", re.IGNORECASE)
 
-SUBDEVICE_REGEX = re.compile(r"^\t\t([0-9a-f]{4})\s+([0-9a-f]{4})\s+(.*)", re.IGNORECASE)
+# Pre-filled data
+pci_id_data = { "pci_id_data": {} }
 
-# Pre-filled with some cards (non-main-vendor && non-subdevices)
-pci_id_data = {
-    "pci_id_data": {
-        "1458:1002": "gfx1030", # Gigabyte Technology Co., Ltd : Aourus Radeon rx6900XT Xtreme Waterforce WB 16G
-        "1458:2425": "gfx1202", # Gigabyte Technology Co., Ltd : Radeon RX 9070 GAMING OC 16G
-    }
-}
+NOT_A_GPU = re.compile(r"audio|usb|usci|serial bus", re.IGNORECASE)
 
 def process_pci_file(args):
     '''
@@ -89,7 +84,6 @@ def process_pci_file(args):
     input_file=args.filename
 
     with open(input_file, "r", encoding="utf-8") as file:
-        add_subdevices = False
         for line in file:
             # Skip comments and deeply indented lines (2 or more indents)
             #if line.startswith("#") or SKIP_LINE_REGEX.match(line):
@@ -105,22 +99,16 @@ def process_pci_file(args):
             if vendor_id not in GPU_VENDOR_MAPPINGS:
                 continue # Skip all non-gpu-vendor lines
 
-            # Match subdevice lines (two tabs)
-            if add_subdevices:
-                match_subdevice = SUBDEVICE_REGEX.match(line)
-                if match_subdevice:
-                    tmp_vendor_id, device_id, device_name = match_subdevice.groups()
-                    if args.lookup is None:
-                        pci_id_data["pci_id_data"][f"{tmp_vendor_id}:{device_id}"] = gpu_arch
-                    elif args.lookup == f"{tmp_vendor_id}:{device_id}":
-                        print(f"{tmp_vendor_id}:{device_id}    {device_name}")
-                else:
-                    add_subdevices = False # Not a subdevice line, stop looking
-
             # Match device lines (single tab)
             match_device = DEVICE_REGEX.match(line)
             if match_device:
                 device_id, device_name = match_device.groups()
+
+            match_device = DEVICE_REGEX.match(line)
+            if match_device:
+                device_id, device_name = match_device.groups()
+                if NOT_A_GPU.search(device_name):
+                    continue 
 
                 # Insert the vendor and device information in dict
                 for gpu in GPU_VENDOR_MAPPINGS[vendor_id]:
