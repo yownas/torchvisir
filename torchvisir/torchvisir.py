@@ -172,11 +172,7 @@ class Torchvisir:
         if len(self.data) == 0:
             self.load_data()
 
-        try:
-            tgt = self.sort_targets(target)[0]
-        except:
-            # Fallback to 'cpu'
-            tgt = 'cpu'
+        tgt = self.sort_targets(list(iter(target)) + ['cpu'])[0]
 
         tgt_sys = platform.system()
         cmd = []

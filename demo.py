@@ -4,6 +4,12 @@ from torchvisir.torchvisir import Torchvisir
 
 tv = Torchvisir()
 
+print(f"### No target:}")
+print("### Dry-run install:")
+print(tv.install_torch(target=[], dry_run=True))
+
+print("")
+
 tv.pci_ids = ["10de:2b85"] # Insert a fake RTX 5090
 print(f"### Target for faked RTX 5090: {tv.get_torch_targets()}")
 print("### Dry-run install:")
