@@ -4,7 +4,7 @@ from torchvisir.torchvisir import Torchvisir
 
 tv = Torchvisir()
 
-print(f"### No target:}")
+print(f"### No target:")
 print("### Dry-run install:")
 print(tv.install_torch(target=[], dry_run=True))
 
