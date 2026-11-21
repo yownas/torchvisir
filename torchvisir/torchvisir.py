@@ -28,6 +28,7 @@ class Torchvisir:
     def __init__(self):
         self.data = {}
         self.pci_ids = []
+        self.priority = ['cu', 'gfx', 'xpu', 'cpu']
 
     def _get_pci_ids_darwin(self):
         """Get GPUs on Apple computers"""
@@ -112,6 +113,17 @@ class Torchvisir:
 
         return self.pci_ids
 
+    def sort_targets(self, targets):
+        """Order targets by self.priority, then highest version first."""
+        def key(t):
+            m = re.match(r'([a-z]+)([0-9a-f]*)$', t)
+            prefix, ver = (m.group(1), m.group(2)) if m else (t, '')
+            rank = self.priority.index(prefix) if prefix in self.priority else len(self.priority)
+            # gfx ids are hex (gfx90a, gfx942, gfx1201); CUDA ids are decimal (cu126, cu130)
+            num = int(ver, 16) if prefix == 'gfx' and ver else int(ver) if ver.isdigit() else 0
+            return (rank, -num, t)
+        return sorted(targets, key=key)
+
     def clear_data(self):
         """Resets data."""
         self.data = {}
@@ -161,7 +173,7 @@ class Torchvisir:
             self.load_data()
 
         try:
-            tgt = next(iter(target)) # TODO: We might have multiple targets
+            tgt = self.sort_targets(target)[0]
         except:
             # Fallback to 'cpu'
             tgt = 'cpu'

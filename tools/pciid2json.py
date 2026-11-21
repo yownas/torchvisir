@@ -12,8 +12,8 @@ GPU_VENDOR_MAPPINGS = {
     # AMD
     #   https://github.com/ROCm/TheRock/blob/main/RELEASES.md#gfx-target-lookup-table
     "1002": {
-        "AMD Instinct MI25:gfx900": re.compile(r"^Vega 20\b", re.IGNORECASE),
-        "AMD Instinct MI60 / MI50, Radeon Pro VII, Radeon VII:gfx906": re.compile(r"Vega 20", re.IGNORECASE),
+        "AMD Instinct MI25:gfx900": re.compile(r"^Vega 10\b", re.IGNORECASE),
+        "AMD Instinct MI60 / MI50, Radeon Pro VII, Radeon VII:gfx906": re.compile(r"^Vega 20\b", re.IGNORECASE),
         "AMD Instinct MI100:gfx908": re.compile(r"^Arcturus\b", re.IGNORECASE),
         "AMD Instinct MI250X / MI250 / MI210:gfx90a": re.compile(r"\[Instinct (MI250X|MI250X/MI250|MI210)", re.IGNORECASE),
         "AMD Instinct MI325X / MI300X / MI300A:gfx942": re.compile(r"\[Instinct (MI325X|MI308X|MI300X|MI300A)", re.IGNORECASE),
@@ -29,24 +29,24 @@ GPU_VENDOR_MAPPINGS = {
         "AMD Radeon RX 7800 XT / 7700 XT, PRO V710 / W7700:gfx1101": re.compile(r"Navi 32\b", re.IGNORECASE),
         "AMD Radeon RX 7600:gfx1102": re.compile(r"Navi 33\b", re.IGNORECASE),
         "AMD Radeon 820M iGPU:gfx1153": re.compile(r"Krackan2 \[Radeon", re.IGNORECASE),
+        "AMD Ryzen AI 9 HX 375 (Strix):gfx1150": re.compile(r"^Strix \[Radeon", re.IGNORECASE),
+        "AMD Ryzen AI Max+ PRO 395 (Strix Halo):gfx1151": re.compile(r"^Strix Halo \[Radeon", re.IGNORECASE),
+        "AMD Ryzen AI 7 350 (Krackan):gfx1152": re.compile(r"^Krackan \[Radeon", re.IGNORECASE),
+        "AMD Ryzen 7 7840U / Ryzen 9 270:gfx1103": re.compile(r"^(Phoenix\d?|HawkPoint\d?) \[Radeon", re.IGNORECASE),
+        "AMD Van Gogh iGPU:gfx1033": re.compile(r"^VanGogh \[", re.IGNORECASE),
+        "AMD Radeon 680M iGPU:gfx1035": re.compile(r"^Rembrandt \[Radeon", re.IGNORECASE),
+        "AMD Raphael iGPU:gfx1036": re.compile(r"^(Raphael|Granite Ridge) \[Radeon", re.IGNORECASE),
         "AMD Radeon RX 9070 / XT, AI PRO R9700 / R9600D:gfx1201": re.compile(r"Navi 48\b", re.IGNORECASE),
         "AMD Radeon RX 9060 / XT:gfx1200": re.compile(r"Navi 44 \[Radeon", re.IGNORECASE),
     },
-    # Supported by TheRock but not found (?) in PCIid db.
-    # AMD Ryzen AI 7 350 gfx1152
-    # AMD Ryzen AI Max+ PRO 395 gfx1151
-    # AMD Ryzen AI 9 HX 375	gfx1150	device-gfx1150
-    # AMD Ryzen 7 7840U / Ryzen 9 270	gfx1103	device-gfx1103
-    # AMD Van Gogh iGPU	gfx1033	device-gfx1033
-    # AMD Radeon 680M iGPU	gfx1035	device-gfx1035
-    # AMD Raphael iGPU	gfx1036	device-gfx1036
-
     # INTEL
     #   https://download.pytorch.org/whl/xpu
     "8086": {
        "Intel XPU:xpu": re.compile(r"^(DG2|Battlemage|Ponte Vecchio|ATS-M)\b"),
-    },
-
+       "Intel XPU (Core Ultra iGPU):xpu": re.compile(
+           r"^((Meteor Lake|Arrow Lake|Lunar Lake|Panther Lake)(-\w+)? \[(Intel|Arc)"
+           r"|Core Ultra \w+ Series Processors Arc Graphics)", re.IGNORECASE),
+           },
     # NVIDIA
     #   https://github.com/easydiffusion/torchruntime/blob/main/torchruntime/gpu_db.py
     #   https://en.wikipedia.org/wiki/CUDA
@@ -73,7 +73,7 @@ DEVICE_REGEX = re.compile(r"^\t([0-9a-f]{4})\s+(.*)", re.IGNORECASE)
 # Pre-filled data
 pci_id_data = { "pci_id_data": {} }
 
-NOT_A_GPU = re.compile(r"audio|usb|usci|serial bus", re.IGNORECASE)
+NOT_A_GPU = re.compile(r"audio|bridge|pcie host|serial bus|switch|usb|ucsi", re.IGNORECASE)
 
 def process_pci_file(args):
     '''
@@ -86,8 +86,7 @@ def process_pci_file(args):
     with open(input_file, "r", encoding="utf-8") as file:
         for line in file:
             # Skip comments and deeply indented lines (2 or more indents)
-            #if line.startswith("#") or SKIP_LINE_REGEX.match(line):
-            if line.startswith("#"):
+            if line.startswith("#") or SKIP_LINE_REGEX.match(line):
                 continue
 
             # Match vendor lines (no tab)
@@ -103,10 +102,6 @@ def process_pci_file(args):
             match_device = DEVICE_REGEX.match(line)
             if match_device:
                 device_id, device_name = match_device.groups()
-
-            match_device = DEVICE_REGEX.match(line)
-            if match_device:
-                device_id, device_name = match_device.groups()
                 if NOT_A_GPU.search(device_name):
                     continue 
 
@@ -119,7 +114,6 @@ def process_pci_file(args):
                             pci_id_data["pci_id_data"][f"{vendor_id}:{device_id}"] = gpu_arch
                         elif args.lookup == f"{vendor_id}:{device_id}":
                             print(f"{vendor_id}:{device_id}    {device_name}")
-                        add_subdevices = True
                         break
 
     # Print the json data
